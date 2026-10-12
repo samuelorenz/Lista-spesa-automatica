@@ -1,0 +1,320 @@
+﻿{
+    "hashes":  [
+                   "E58BACCD6E817B3C5C48155BE7C76442298247435EB2CB1DB4BA3A208BEA65F4",
+                   "82B4DD9117AA9426333C446EFB6B1F651F3D64B04049ABE486813778127AB707"
+               ],
+    "receipts":  [
+                     {
+                         "id":  "cf02dd58",
+                         "store":  "Conad",
+                         "date":  "2026-10-11",
+                         "time":  null,
+                         "doc":  "22420046",
+                         "total":  "133.69",
+                         "lines":  [
+                                       {
+                                           "t":  "ICEBERG 2,48",
+                                           "n":  "iceberg",
+                                           "p":  "2.48"
+                                       },
+                                       {
+                                           "t":  "Sconto -0,69",
+                                           "n":  "sconto",
+                                           "p":  "-0.69"
+                                       },
+                                       {
+                                           "t":  "CAROTE ORI TOSCANA 1 # 0,94",
+                                           "n":  "caroteoritoscana1",
+                                           "p":  "0.94"
+                                       },
+                                       {
+                                           "t":  "SACCHETTO BIO CONAD 0,02",
+                                           "n":  "sacchettobioconad",
+                                           "p":  "0.02"
+                                       },
+                                       {
+                                           "t":  "BANANE CPQ CO 1,20",
+                                           "n":  "bananecpqco",
+                                           "p":  "1.20"
+                                       },
+                                       {
+                                           "t":  "SACCHETTO BIO CONAD 0,02",
+                                           "n":  "sacchettobioconad",
+                                           "p":  "0.02"
+                                       },
+                                       {
+                                           "t":  "2 x AVOCADO 220g EST 4,36",
+                                           "n":  "avocado220gest",
+                                           "p":  "4.36"
+                                       },
+                                       {
+                                           "t":  "SALVIA CONF. 30 IT # 0,99",
+                                           "n":  "salviaconf30it",
+                                           "p":  "0.99"
+                                       },
+                                       {
+                                           "t":  "Sconto -0,19",
+                                           "n":  "sconto",
+                                           "p":  "-0.19"
+                                       },
+                                       {
+                                           "t":  "MELE GOLDEN D. # 0,86",
+                                           "n":  "melegoldend",
+                                           "p":  "0.86"
+                                       },
+                                       {
+                                           "t":  "PATATA SILA 3,48",
+                                           "n":  "patatasila",
+                                           "p":  "3.48"
+                                       },
+                                       {
+                                           "t":  "ZUCCA BUTTERNUT IT O # 2,73",
+                                           "n":  "zuccabutternutito",
+                                           "p":  "2.73"
+                                       },
+                                       {
+                                           "t":  "2 x LAVAZZA FORTE 19,98",
+                                           "n":  "lavazzaforte",
+                                           "p":  "19.98"
+                                       },
+                                       {
+                                           "t":  "Offerta 2X1 -9,99",
+                                           "n":  "offerta2x1",
+                                           "p":  "-9.99"
+                                       },
+                                       {
+                                           "t":  "2 x POLPA POMODORO MUTTI 3,98",
+                                           "n":  "polpapomodoromutti",
+                                           "p":  "3.98"
+                                       },
+                                       {
+                                           "t":  "Offerta 2Xl -1,99",
+                                           "n":  "offerta2xl",
+                                           "p":  "-1.99"
+                                       },
+                                       {
+                                           "t":  "2 x TONNO NOSTROMO 70X4 11,98",
+                                           "n":  "tonnonostromo70x4",
+                                           "p":  "11.98"
+                                       },
+                                       {
+                                           "t":  "Offerta 2X1 -5,99",
+                                           "n":  "offerta2x1",
+                                           "p":  "-5.99"
+                                       },
+                                       {
+                                           "t":  "2 x PRDS.COTTO FIRMATI A 5,98",
+                                           "n":  "prdscottofirmatia",
+                                           "p":  "5.98"
+                                       },
+                                       {
+                                           "t":  "Offerta 2X1 -2,99",
+                                           "n":  "offerta2x1",
+                                           "p":  "-2.99"
+                                       },
+                                       {
+                                           "t":  "MOZZARELLA MUKKI TRI # 3,99",
+                                           "n":  "mozzarellamukkitri",
+                                           "p":  "3.99"
+                                       },
+                                       {
+                                           "t":  "Sconto -2,00",
+                                           "n":  "sconto",
+                                           "p":  "-2.00"
+                                       },
+                                       {
+                                           "t":  "2 x RICOTTINA VALL 2,42",
+                                           "n":  "ricottinavall",
+                                           "p":  "2.42"
+                                       },
+                                       {
+                                           "t":  "Sconto -0,44",
+                                           "n":  "sconto",
+                                           "p":  "-0.44"
+                                       },
+                                       {
+                                           "t":  "2 x TORTELLONI RIC/SPIN. 7,10",
+                                           "n":  "tortelloniricspin",
+                                           "p":  "7.10"
+                                       },
+                                       {
+                                           "t":  "Offerta 2Xl -3,55",
+                                           "n":  "offerta2xl",
+                                           "p":  "-3.55"
+                                       },
+                                       {
+                                           "t":  "TRENTINGRANA DOP 20M 8,96",
+                                           "n":  "trentingranadop20m",
+                                           "p":  "8.96"
+                                       },
+                                       {
+                                           "t":  "ASIAGO DOP CONAD 3,77",
+                                           "n":  "asiagodopconad",
+                                           "p":  "3.77"
+                                       },
+                                       {
+                                           "t":  "PECORINO SORANO # 4,95",
+                                           "n":  "pecorinosorano",
+                                           "p":  "4.95"
+                                       },
+                                       {
+                                           "t":  "PANE COTTO A LEGNA M # 2,06",
+                                           "n":  "panecottoalegnam",
+                                           "p":  "2.06"
+                                       },
+                                       {
+                                           "t":  "NOVIBLOC FONDENTE 70 2,99",
+                                           "n":  "noviblocfondente70",
+                                           "p":  "2.99"
+                                       },
+                                       {
+                                           "t":  "Sconto Carta Insieme -0,34",
+                                           "n":  "scontocartainsieme",
+                                           "p":  "-0.34"
+                                       },
+                                       {
+                                           "t":  "2 x YOGURT BIANCO N 2,38",
+                                           "n":  "yogurtbiancon",
+                                           "p":  "2.38"
+                                       },
+                                       {
+                                           "t":  "3 x HIPRO AL CUCCHIAIO 3,45",
+                                           "n":  "hiproalcucchiaio",
+                                           "p":  "3.45"
+                                       },
+                                       {
+                                           "t":  "5 x HIPRO AL CUCCHIAIO 5,75",
+                                           "n":  "hiproalcucchiaio",
+                                           "p":  "5.75"
+                                       },
+                                       {
+                                           "t":  "LATTE ps MUKk1 # 3,70",
+                                           "n":  "lattepsmukk1",
+                                           "p":  "3.70"
+                                       },
+                                       {
+                                           "t":  "Offerta 2Xl -1,85",
+                                           "n":  "offerta2xl",
+                                           "p":  "-1.85"
+                                       },
+                                       {
+                                           "t":  "UOVA A TERRA Toscovo # 3,30",
+                                           "n":  "uovaaterratoscovo",
+                                           "p":  "3.30"
+                                       },
+                                       {
+                                           "t":  "FARRO SOFFIATO MIELE # 3,59",
+                                           "n":  "farrosoffiatomiele",
+                                           "p":  "3.59"
+                                       },
+                                       {
+                                           "t":  "Sconto Carta -0,72",
+                                           "n":  "scontocarta",
+                                           "p":  "-0.72"
+                                       },
+                                       {
+                                           "t":  "FROL.GOCCE CIOCCOLAT 2,19",
+                                           "n":  "frolgoccecioccolat",
+                                           "p":  "2.19"
+                                       },
+                                       {
+                                           "t":  "RISO BASMATI 1,69",
+                                           "n":  "risobasmati",
+                                           "p":  "1.69"
+                                       },
+                                       {
+                                           "t":  "PIADINA Dl GkAN0 DUR 3,60",
+                                           "n":  "piadinadlgkan0dur",
+                                           "p":  "3.60"
+                                       },
+                                       {
+                                           "t":  "Offerta 2Xl -1,80",
+                                           "n":  "offerta2xl",
+                                           "p":  "-1.80"
+                                       },
+                                       {
+                                           "t":  "2 x N.26 MEZZI RIGAT.INT 3,18",
+                                           "n":  "n26mezzirigatint",
+                                           "p":  "3.18"
+                                       },
+                                       {
+                                           "t":  "Offerta 2X1 -1,59",
+                                           "n":  "offerta2x1",
+                                           "p":  "-1.59"
+                                       },
+                                       {
+                                           "t":  "CECI CONAD 400/250 2,09",
+                                           "n":  "ceciconad400250",
+                                           "p":  "2.09"
+                                       },
+                                       {
+                                           "t":  "CHIANTI CL. # 8,90",
+                                           "n":  "chianticl",
+                                           "p":  "8.90"
+                                       },
+                                       {
+                                           "t":  "Sconto Carta Insieme -1,45",
+                                           "n":  "scontocartainsieme",
+                                           "p":  "-1.45"
+                                       },
+                                       {
+                                           "t":  "SPEZZATINO B.A. 8,36",
+                                           "n":  "spezzatinoba",
+                                           "p":  "8.36"
+                                       },
+                                       {
+                                           "t":  "SPEZZATINO B.A. 8,42",
+                                           "n":  "spezzatinoba",
+                                           "p":  "8.42"
+                                       },
+                                       {
+                                           "t":  "BACCHE GINEPRO 1,05",
+                                           "n":  "baccheginepro",
+                                           "p":  "1.05"
+                                       },
+                                       {
+                                           "t":  "DADO CUORE BRODO 1,25",
+                                           "n":  "dadocuorebrodo",
+                                           "p":  "1.25"
+                                       },
+                                       {
+                                           "t":  "CUORI NASELLO CONA 4,35",
+                                           "n":  "cuorinasellocona",
+                                           "p":  "4.35"
+                                       },
+                                       {
+                                           "t":  "Sconto Carta Insieme -0,56",
+                                           "n":  "scontocartainsieme",
+                                           "p":  "-0.56"
+                                       },
+                                       {
+                                           "t":  "CIF SPR CREMA 2,49",
+                                           "n":  "cifsprcrema",
+                                           "p":  "2.49"
+                                       },
+                                       {
+                                           "t":  "Sconto Carta 20.0* -0,50",
+                                           "n":  "scontocarta200",
+                                           "p":  "-0.50"
+                                       },
+                                       {
+                                           "t":  "SUNSILK CREMA BALS. 2,74",
+                                           "n":  "sunsilkcremabals",
+                                           "p":  "2.74"
+                                       },
+                                       {
+                                           "t":  "SALV. INT. ES 0,69",
+                                           "n":  "salvintes",
+                                           "p":  "0.69"
+                                       }
+                                   ],
+                         "files":  [
+                                       "C:\\Users\\samu1\\Desktop\\Progetti Claude\\Lista spesa automatica\\Scontrini\\Archiviati\\Conad_2026-10-11_p1.jpeg",
+                                       "C:\\Users\\samu1\\Desktop\\Progetti Claude\\Lista spesa automatica\\Scontrini\\Archiviati\\Conad_2026-10-11_p2.jpeg"
+                                   ],
+                         "orig":  "IMG_3972",
+                         "base":  "Conad_2026-10-11",
+                         "txt":  "C:\\Users\\samu1\\Desktop\\Progetti Claude\\Lista spesa automatica\\Scontrini\\Archiviati\\Conad_2026-10-11.txt"
+                     }
+                 ]
+}

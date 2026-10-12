@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lista Spesa Automatica</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1d2330;--mu:#6b7385;--ac:#1f8a4c;--ac2:#e8f5ee;--wa:#c2410c;--bd:#e2e5ea}
+@media (prefers-color-scheme:dark){:root{--bg:#14171d;--card:#1d222b;--tx:#e8ebf0;--mu:#8f98a9;--ac:#3ecf7a;--ac2:#1b3a2a;--wa:#fb923c;--bd:#2c3340}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,Segoe UI,sans-serif}
+header{padding:16px;max-width:980px;margin:auto}
+h1{margin:0;font-size:22px}
+nav{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+nav button{border:1px solid var(--bd);background:var(--card);color:var(--tx);padding:8px 14px;border-radius:20px;cursor:pointer;font:inherit}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+main{max-width:980px;margin:auto;padding:0 16px 40px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 10px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:6px 6px;border-bottom:1px solid var(--bd);vertical-align:middle}
+th{font-size:12px;color:var(--mu);font-weight:600}
+input,select,textarea{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:6px 8px;max-width:100%}
+input[type=number]{width:72px}
+textarea{width:100%;min-height:130px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+button.b{background:var(--ac);color:#fff;border:0;border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit}
+button.g{background:transparent;color:var(--mu);border:1px solid var(--bd);border-radius:8px;padding:4px 9px;cursor:pointer;font:inherit}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+.tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:12px;background:var(--ac2);color:var(--ac)}
+.tag.w{background:#fde8d8;color:var(--wa)}
+.mu{color:var(--mu);font-size:13px}
+.sav{color:var(--ac);font-weight:600}
+.tot{display:flex;gap:18px;flex-wrap:wrap;font-size:15px}
+.tot b{font-size:20px}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<header>
+  <h1>🛒 Lista Spesa Automatica</h1>
+  <div class="mu">Scorte → scontrini → volantini → lista consigliata per risparmiare</div>
+  <nav id="nav"></nav>
+</header>
+<main id="main"></main>
+
+<script>
+// ---------- stato ----------
+const KEY='listaspesa.v1';
+const IGNORE=/^(#|totale|subtotale|sub-?totale|resto\b|contanti|carta\s*(di|cred|banc|fid)|bancomat|pagamento|iva\b|importo|sconto|offerta|punti|arrotond|buono|ticket|tel\b|p\.?\s?iva|cod\b|data\b|ora\b|scontrino|cassa|operatore|grazie|documento|n\.|nr\b|numero|di cui|imponibile|pezzi|articoli|fidaty|card\b|saldo|elettronic)/i;
+let S=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s)return s}catch(e){}
+  return{products:[],flyers:[],receipts:[],ignored:[]}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const uid=()=>Math.random().toString(36).slice(2,9);
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]/g,' ').replace(/\s+/g,' ').trim();
+
+// ---------- categorie ----------
+// [icona, nome, parole chiave]. L'ordine è anche la priorità (la prima che corrisponde vince) e l'ordine in lista.
+// Le frasi (più parole) hanno la precedenza sulle parole singole. Singolare/plurale sono equivalenti (mela=mele).
+const CATS=[
+ ['🥫','Dispensa','olio aceto sale pepe spezie origano dado brodo passata polpa pelati sugo salsa concentrato tonno sgombro sardine acciughe alici ceci fagioli lenticchie piselli legumi mais olive capperi sottaceti giardiniera maionese ketchup senape pesto bacche ginepro lievito pangrattato farina zucchero bicarbonato conserva conserve scatola vaniglia'],
+ ['🍪','Colazione e dolci','biscotti biscotto frollini frol gocce cioccolato cioccolat cioccolata nutella novibloc fondente marmellata confettura miele caffe lavazza the te tisana camomilla cacao cereali muesli cornflakes merendine merendina torta torte wafer budino dolce dolci savoiardi pavesini kinder oreo ringo'],
+ ['🥖','Pane e forno','pane panino panini piadina piadine focaccia grissini crackers cracker fette biscottate taralli tramezzini brioche cornetto cornetti croissant pancarre bauletto schiacciatine wasa'],
+ ['🍝','Pasta e cereali','pasta spaghetti penne fusilli rigatoni rigat rigate mezzi farfalle tagliatelle linguine bucatini paccheri riso basmati risotto farro orzo couscous cous quinoa polenta avena semola'],
+ ['🥛','Latticini e uova','latte yogurt yoghurt hipro burro panna uova uovo mozzarella ricotta ricottina mascarpone besciamella kefir skyr stracciatella burrata'],
+ ['🧀','Salumi e formaggi','formaggio formaggi parmigiano grana trentingrana asiago pecorino gorgonzola provola scamorza fontina emmental stracchino taleggio prosciutto pros speck salame mortadella bresaola pancetta wurstel salumi affettato affettati nduja guanciale'],
+ ['🥩','Carne','carne pollo petto tacchino manzo vitello maiale suino salsiccia salsicce hamburger spezzatino macinato bistecca costata fettina fettine arrosto cotoletta cotolette coniglio agnello braciole fesa bacon polpette'],
+ ['🐟','Pesce','=pesce salmone nasello merluzzo gamberi gamberetti cozze vongole orata branzino trota polpo calamari seppie baccala sogliola platessa spigola totani'],
+ ['❄️','Surgelati','surgelato surgelati surgelata gelato gelati ghiaccioli findus bastoncini minestrone'],
+ ['🥬','Frutta e verdura','frutta verdura ortaggi mela mele pera pere banana banane arancia arance mandarini limone limoni kiwi uva fragola fragole =pesca pesche albicocca albicocche ciliegie melone anguria avocado zucca patata patate carota carote cipolla cipolle aglio insalata insalatina lattuga iceberg rucola spinaci zucchina zucchine melanzana melanzane pomodoro pomodori peperone peperoni cetriolo finocchio sedano broccoli cavolo cavolfiore fagiolini funghi basilico prezzemolo salvia rosmarino radicchio porro porri bietola asparagi'],
+ ['🍕','Piatti pronti','pizza lasagne tortelloni tortellini ravioli gnocchi cannelloni arancini cotolette pronto pronti precotto'],
+ ['🥤','Bevande','acqua frizzante coca cola fanta sprite aranciata succo succhi birra vino chianti prosecco spumante bibita estathe energy sciroppo tonica amaro liquore grappa whisky vodka gin aperol spritz sidro montecch'],
+ ['🍿','Snack','patatine salatini popcorn noccioline arachidi pistacchi mandorle noci frutta secca barretta barrette caramelle gomme chips snack'],
+ ['🧴','Igiene personale','shampoo balsamo bals sunsilk bagnoschiuma doccia sapone deodorante dentifricio spazzolino collutorio assorbenti rasoio rasoi cotone cotton fioc lenitive intimo'],
+ ['🧽','Casa e pulizia','detersivo svelto lavatrice ammorbidente candeggina ammoniaca sgrassatore cif spugna spugne sacchetti sacchetto scottex tovaglioli pellicola alluminio lavastoviglie pastiglie wc anticalcare pulitore vetri lenor dash napisan finish calgon swiffer piatti pavimenti bucato igienica fazzoletti candele pile lampadina batterie guanti'],
+ ['🐾','Animali','cane cani gatto gatti crocchette lettiera whiskas felix purina friskies'],
+ ['📦','Altro','']
+];
+const stem=w=>w.replace(/[aeio]$/,'');
+// frasi: valgono solo come sequenza esatta di parole
+const PHRASES={'Frutta e verdura':['odori da brodo'],'Dispensa':['pasta sfoglia','pasta frolla','noce moscata'],'Igiene personale':['salv int','det intim','crema bals'],'Casa e pulizia':['carta igienica'],'Snack':['frutta secca','farro soffiato'],'Colazione e dolci':['crema nocciole']};
+const catNames=CATS.map(c=>c[1]);
+function guessCat(text){
+  const t=' '+norm(text)+' ';
+  for(const c of CATS){for(const ph of(PHRASES[c[1]]||[]))if(t.includes(' '+ph+' '))return c[1]}
+  const words=norm(text).split(' ').filter(Boolean);
+  for(const c of CATS){
+    const kws=c[2].split(/\s+/).filter(Boolean);
+    for(const k of kws)for(const w of words){
+      if(k[0]==='='){if(w===k.slice(1))return c[1]}            // "=parola": solo corrispondenza esatta
+      else if(w===k||(stem(k).length>=4&&stem(w)===stem(k)))return c[1]}}
+  return 'Altro'}
+const catOf=p=>(p.cat&&catNames.includes(p.cat))?p.cat:guessCat(p.name+' '+(p.keys||''));
+const catIcon=n=>(CATS.find(c=>c[1]===n)||CATS[CATS.length-1])[0];
+const catRank=n=>{const i=catNames.indexOf(n);return i<0?99:i};
+// assegna la categoria ai prodotti che non l'hanno (senza toccare quantità o prezzi)
+function ensureCats(){let ch=false;for(const p of S.products)if(!p.cat||!catNames.includes(p.cat)){p.cat=guessCat(p.name+' '+(p.keys||''));ch=true}if(ch)save()}
+ensureCats();
+
+// ---------- i miei supermercati ----------
+// Elenco catene proposte; S.myStores = quelle spuntate (vuoto = nessun filtro, valgono tutte).
+const CHAINS=['Esselunga','Conad','Coop','Lidl','Eurospin','Carrefour','MD','Penny','Aldi','Pam','Iper','Despar','Tigros','Famila','Bennet',"In's",'Dok','Sigma','Todis','Prix','Unes','Il Gigante','Crai','Sisa','Simply','Elite','Acqua e Sapone','NaturaSì'];
+const allStores=()=>[...new Set([...CHAINS,...(S.customStores||[])])];
+const isMine=st=>{const m=S.myStores||[];return !m.length||m.some(x=>norm(x)===norm(st))};
+const usable=f=>validFlyer(f)&&isMine(f.store);
+function toggleStore(n){const m=S.myStores=S.myStores||[];const i=m.findIndex(x=>norm(x)===norm(n));if(i>=0)m.splice(i,1);else m.push(n);save();render()}
+function addStore(){const n=document.getElementById('cs_name').value.trim();if(!n)return;
+  if(!allStores().some(x=>norm(x)===norm(n)))(S.customStores=S.customStores||[]).push(n);
+  const m=S.myStores=S.myStores||[];if(!m.some(x=>norm(x)===norm(n)))m.push(n);save();render()}
+function clearStores(){S.myStores=[];save();render()}
+function storeNote(){const m=S.myStores||[];
+  return`<div class="mu" style="margin-top:6px">📍 ${m.length?esc(m.join(', ')):'tutti i negozi (nessun filtro)'} · <a href="#" onclick="go('volantini');return false">${m.length?'modifica':'scegli i supermercati vicino a te'}</a></div>`}
+const num=s=>parseFloat(String(s).replace(',','.'));
+const eur=n=>isFinite(n)?n.toFixed(2).replace('.',',')+' €':'—';
+const today=()=>{const d=new Date();d.setHours(0,0,0,0);return d};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function keysOf(p){return(p.keys||p.name).split(',').map(norm).filter(Boolean)}
+function matches(p,text){const t=' '+norm(text)+' ';return keysOf(p).some(k=>t.includes(' '+k+' ')||t.includes(' '+k))}
+// quantità effettiva: sottrae il consumo giornaliero stimato
+function qtyNow(p){const days=(Date.now()-(p.upd||Date.now()))/864e5;return Math.max(0,p.qty-(p.use||0)*days)}
+function setQty(p,q){p.qty=Math.max(0,q);p.upd=Date.now()}
+function parseDate(s){if(!s)return null;const m=String(s).match(/(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?/);
+  if(!m)return null;let y=m[3]?+m[3]:today().getFullYear();if(y<100)y+=2000;const d=new Date(y,+m[2]-1,+m[1]);return isNaN(d)?null:d}
+function validFlyer(f){const t=today(),a=parseDate(f.from),b=parseDate(f.to);return(!a||a<=t)&&(!b||b>=t)}
+
+// ---------- tab ----------
+const TABS=[['lista','📋 Lista consigliata'],['scorte','📦 Scorte'],['scontrini','🧾 Scontrini'],['volantini','🏷️ Volantini']];
+let tab=localStorage.getItem('ls.tab')||'lista';
+function render(){
+  document.getElementById('nav').innerHTML=TABS.map(([k,l])=>`<button class="${k===tab?'on':''}" onclick="go('${k}')">${l}</button>`).join('');
+  document.getElementById('main').innerHTML=vBanner()+({lista:vLista,scorte:vScorte,scontrini:vScontrini,volantini:vVolantini})[tab]();
+}
+
+// ---------- controllo volantini (ad ogni apertura/aggiornamento) ----------
+// Per ogni negozio con volantino valido: quanto costerebbe la spesa necessaria oggi.
+// Gli articoli senza offerta in quel negozio sono valutati al prezzo abituale.
+function priceAt(p,store){
+  const c=S.flyers.filter(f=>usable(f)&&f.store===store&&matches(p,f.product));
+  return c.length?Math.min(...c.map(f=>num(f.price))):null}
+function compareStores(items){
+  const stores=[...new Set(S.flyers.filter(usable).map(f=>f.store))];
+  return stores.map(st=>{
+    let cost=0,save=0,offers=0;
+    for(const i of items){
+      const usual=i.p.usual||i.p.last||0,o=priceAt(i.p,st);
+      const price=(o!==null)?o:usual;cost+=price*i.n;
+      if(o!==null){offers++;if(usual>0&&o<usual)save+=(usual-o)*i.n}}
+    return{st,cost,save,offers}
+  }).sort((a,b)=>b.save-a.save||a.cost-b.cost)}
+function vBanner(){
+  if(!S.products.length)return'';
+  const valid=S.flyers.filter(usable),expired=S.flyers.filter(f=>!validFlyer(f)).length;
+  const other=S.flyers.filter(f=>validFlyer(f)&&!isMine(f.store)).length;   // validi ma di negozi non selezionati
+  const soon=valid.filter(f=>{const b=parseDate(f.to);return b&&(b-today())/864e5<=2}).length;
+  let h='<div class="card" style="border-color:var(--ac)"><b>🔎 Controllo volantini</b> ';
+  if(!valid.length)return h+`<span class="tag w">nessun volantino valido</span><div class="mu">Aggiungi le offerte della settimana nella scheda Volantini per avere il confronto.${expired?` (${expired} scadute)`:''}${other?` ${other} offerte valide sono di negozi che non hai selezionato.`:''}</div>${storeNote()}</div>`;
+  const items=compute(),cmp=compareStores(items);
+  h+=`<span class="tag">${valid.length} offerte valide</span>${expired?` <span class="tag w">${expired} scadute</span>`:''}${soon?` <span class="tag w">${soon} scadono entro 2 giorni</span>`:''}${other?` <span class="mu">(${other} di altri negozi ignorate)</span>`:''}`;
+  if(!items.length)return h+'<div class="mu">Scorte a posto: nessuna spesa necessaria oggi.</div>'+storeNote()+'</div>';
+  const best=cmp[0],mixSave=items.reduce((a,i)=>a+i.save,0),mixCost=items.reduce((a,i)=>a+(i.unit||0)*i.n,0);
+  h+=`<div style="margin-top:6px">Oggi conviene <b>${esc(best.st)}</b>: spesa di ${items.length} articoli ≈ <b>${eur(best.cost)}</b>, risparmi <span class="sav">${eur(best.save)}</span> (${best.offers} in offerta).`;
+  if(mixSave>best.save+0.005)h+=`<br>Dividendo la spesa tra più negozi (ogni articolo dove costa meno) arrivi a <b>${eur(mixCost)}</b> e risparmi <span class="sav">${eur(mixSave)}</span>.`;
+  return h+'</div>'+storeNote()+'</div>'}
+function go(t){tab=t;try{localStorage.setItem('ls.tab',t)}catch(e){}render()}
+
+// ---------- logica consigli ----------
+function bestFlyer(p){
+  const c=S.flyers.filter(f=>usable(f)&&matches(p,f.product));
+  if(!c.length)return null;return c.reduce((a,b)=>num(a.price)<=num(b.price)?a:b)}
+function compute(){
+  const items=[];
+  for(const p of S.products){
+    const q=qtyNow(p),min=p.min||0,target=Math.max(p.target||0,min+1);
+    const fl=bestFlyer(p);const usual=p.usual||0;
+    const offer=fl?num(fl.price):null;
+    const disc=(fl&&usual>0)?1-offer/usual:0;
+    const low=q<=min;
+    if(low){
+      const n=Math.max(1,Math.ceil(target-q));
+      const unit=fl?Math.min(offer,usual||offer):usual;
+      items.push({p,n,reason:'low',fl,unit,save:fl&&usual>0?Math.max(0,(usual-offer)*n):0,q});
+    }else if(fl&&disc>=0.2&&q<target){
+      const n=Math.max(1,Math.ceil(target-q));
+      items.push({p,n,reason:'stock',fl,unit:offer,save:(usual-offer)*n,q,disc});
+    }
+  }
+  return items;
+}
+
+// ---------- vista lista ----------
+function vLista(){
+  const items=compute();
+  if(!S.products.length)return`<div class="card">Nessuna scorta ancora. Vai in <b>Scorte</b> per aggiungere i prodotti, oppure importa uno <b>Scontrino</b>.
+  <p><button class="b" onclick="demo()">Carica dati di esempio</button></p></div>`;
+  const byStore={};
+  items.forEach(i=>{const st=i.fl?i.fl.store:'Dove capita (nessun volantino)';(byStore[st]=byStore[st]||[]).push(i)});
+  const tot=items.reduce((a,i)=>a+(i.unit||0)*i.n,0),sav=items.reduce((a,i)=>a+i.save,0);
+  let h=`<div class="card"><div class="tot"><div>Articoli<br><b>${items.length}</b></div><div>Spesa stimata<br><b>${eur(tot)}</b></div>
+   <div>Risparmio vs prezzo abituale<br><b class="sav">${eur(sav)}</b></div></div>
+   <div class="mu" style="margin-top:8px">La lista è generata da scorte sotto soglia + offerte dei volantini ancora valide (sconto ≥20%).</div></div>`;
+  if(!items.length)h+=`<div class="card">✅ Scorte a posto, nessuna offerta interessante al momento.</div>`;
+  const cmp=items.length?compareStores(items):[];
+  if(cmp.length)h+=`<div class="card"><h2>Dove conviene fare la spesa</h2><table><tr><th>Negozio</th><th>Costo stimato</th><th>Risparmio</th><th>Articoli in offerta</th></tr>
+   ${cmp.map((c,k)=>`<tr><td>${k===0?'🏆 ':''}${esc(c.st)}</td><td>${eur(c.cost)}</td><td class="sav">${eur(c.save)}</td><td>${c.offers}/${items.length}</td></tr>`).join('')}</table>
+   <div class="mu" style="margin-top:6px">Gli articoli senza offerta nel negozio sono contati al prezzo abituale.</div></div>`;
+  for(const st of Object.keys(byStore).sort()){
+    h+=`<div class="card"><h2>${esc(st)}</h2><div class="scroll"><table><tr><th></th><th>Prodotto</th><th>Q.tà</th><th>Prezzo</th><th>Perché</th><th></th></tr>`;
+    let lastCat=null;
+    for(const i of byStore[st].sort((a,b)=>catRank(catOf(a.p))-catRank(catOf(b.p))||a.p.name.localeCompare(b.p.name))){
+      const c=catOf(i.p);
+      if(c!==lastCat){lastCat=c;h+=`<tr><td colspan="6" style="background:var(--ac2)"><b>${catIcon(c)} ${esc(c)}</b></td></tr>`}
+      h+=`<tr><td><input type="checkbox" class="chk" data-id="${i.p.id}" data-n="${i.n}" checked></td>
+      <td>${esc(i.p.name)}<div class="mu">in casa: ${i.q.toFixed(1)} ${esc(i.p.unit||'pz')}</div></td>
+      <td>${i.n}</td><td>${eur(i.unit)}${i.fl?` <span class="tag">offerta</span>`:''}</td>
+      <td>${i.reason==='low'?'<span class="tag w">sotto scorta</span>':`<span class="tag">scorta in offerta −${Math.round(i.disc*100)}%</span>`}
+        ${i.save>0?`<div class="sav">risparmi ${eur(i.save)}</div>`:''}${i.fl&&i.fl.to?`<div class="mu">fino al ${esc(i.fl.to)}</div>`:''}</td><td></td></tr>`}
+    h+=`</table></div></div>`}
+  if(items.length)h+=`<button class="b" onclick="bought()">✔ Ho comprato i selezionati → aggiorna scorte</button>`;
+  return h;
+}
+function bought(){
+  document.querySelectorAll('.chk:checked').forEach(c=>{
+    const p=S.products.find(x=>x.id===c.dataset.id);if(!p)return;
+    const q=qtyNow(p);setQty(p,q+ +c.dataset.n);
+    const fl=bestFlyer(p);if(fl)p.last=num(fl.price)});
+  save();render()}
+
+// ---------- vista scorte ----------
+function vScorte(){
+  let h=`<div class="card"><h2>Aggiungi prodotto</h2><div class="row">
+   <input id="n_name" placeholder="Nome (es. Latte)" size="16">
+   <input id="n_keys" placeholder="Parole chiave scontrino (es. latte, lt parz)" size="26">
+   <input id="n_unit" placeholder="unità" size="6" value="pz">
+   <select id="n_cat"><option value="">Categoria: automatica</option>${catNames.map(n=>`<option>${n}</option>`).join('')}</select>
+   </div><div class="row">
+   <label class="mu">In casa <input id="n_qty" type="number" value="0" step="any"></label>
+   <label class="mu">Minimo <input id="n_min" type="number" value="1" step="any"></label>
+   <label class="mu">Obiettivo <input id="n_target" type="number" value="4" step="any"></label>
+   <label class="mu">Consumo/giorno <input id="n_use" type="number" value="0" step="any"></label>
+   <label class="mu">Prezzo abituale € <input id="n_usual" type="number" value="0" step="0.01"></label>
+   <button class="b" onclick="addProd()">Aggiungi</button></div>
+   <div class="mu">Minimo = sotto questa quantità va in lista. Obiettivo = quanto vuoi averne dopo la spesa. Il consumo/giorno scala automaticamente le scorte.</div></div>`;
+  const cf=catFilter;
+  const shown=S.products.filter(p=>!cf||catOf(p)===cf).sort((a,b)=>catRank(catOf(a))-catRank(catOf(b))||a.name.localeCompare(b.name));
+  const counts={};S.products.forEach(p=>{const c=catOf(p);counts[c]=(counts[c]||0)+1});
+  h+=`<div class="card"><div class="row"><h2 style="margin:0">Scorte (${shown.length}${cf?' di '+S.products.length:''})</h2>
+   <select onchange="setCatFilter(this.value)"><option value="">Tutte le categorie</option>${catNames.filter(n=>counts[n]).map(n=>`<option value="${n}" ${n===cf?'selected':''}>${catIcon(n)} ${n} (${counts[n]})</option>`).join('')}</select></div>
+   <div class="scroll"><table><tr><th>Prodotto</th><th>In casa</th><th>Min</th><th>Obiett.</th><th>Cons./g</th><th>Prezzo ab.</th><th>Ultimo</th><th></th></tr>`;
+  let lastCat=null;
+  for(const p of shown){
+    const q=qtyNow(p),c=catOf(p);
+    if(c!==lastCat){lastCat=c;h+=`<tr><td colspan="8" style="background:var(--ac2)"><b>${catIcon(c)} ${esc(c)}</b></td></tr>`}
+    h+=`<tr><td>${esc(p.name)}<div class="mu">${esc(p.keys||'')}</div>
+      <select style="font-size:12px;padding:2px 4px" onchange="setCat('${p.id}',this.value)">${catNames.map(n=>`<option ${n===c?'selected':''}>${n}</option>`).join('')}</select></td>
+    <td><button class="g" onclick="adj('${p.id}',-1)">−</button> <b ${q<=p.min?'style="color:var(--wa)"':''}>${q.toFixed(1)}</b> ${esc(p.unit||'')} <button class="g" onclick="adj('${p.id}',1)">+</button></td>
+    <td><input type="number" value="${p.min}" step="any" onchange="fld('${p.id}','min',this.value)"></td>
+    <td><input type="number" value="${p.target}" step="any" onchange="fld('${p.id}','target',this.value)"></td>
+    <td><input type="number" value="${p.use||0}" step="any" onchange="fld('${p.id}','use',this.value)"></td>
+    <td><input type="number" value="${p.usual||0}" step="0.01" onchange="fld('${p.id}','usual',this.value)"></td>
+    <td>${p.last?eur(p.last):'—'}</td><td><button class="g" onclick="delProd('${p.id}')">✕</button></td></tr>`}
+  return h+`</table></div></div>`;
+}
+function addProd(){
+  const g=i=>document.getElementById(i).value;const name=g('n_name').trim();if(!name)return;
+  const keys=g('n_keys').trim()||name;
+  S.products.push({id:uid(),name,keys,cat:g('n_cat')||guessCat(name+' '+keys),unit:g('n_unit')||'pz',qty:num(g('n_qty'))||0,upd:Date.now(),
+    min:num(g('n_min'))||0,target:num(g('n_target'))||1,use:num(g('n_use'))||0,usual:num(g('n_usual'))||0});
+  save();render()}
+let catFilter='';try{catFilter=localStorage.getItem('ls.cat')||''}catch(e){}
+function setCatFilter(v){catFilter=v;try{localStorage.setItem('ls.cat',v)}catch(e){}render()}
+function setCat(id,v){const p=S.products.find(x=>x.id===id);if(p){p.cat=v;save();render()}}
+function adj(id,d){const p=S.products.find(x=>x.id===id);setQty(p,qtyNow(p)+d);save();render()}
+function fld(id,k,v){const p=S.products.find(x=>x.id===id);
+  if(k==='use'){setQty(p,qtyNow(p))}p[k]=num(v)||0;save();render()}
+function delProd(id){S.products=S.products.filter(x=>x.id!==id);save();render()}
+
+// ---------- scontrini ----------
+let pending=null,pendingFp='',pendingDup=false;
+function vScontrini(){
+  let h=`<div class="card"><h2>Incolla il testo dello scontrino</h2>
+   <textarea id="r_txt" placeholder="LATTE PARZ SCREM 1L      1,29&#10;2 x PASTA BARILLA 500G   1,78&#10;UOVA 6 PZ               2,10&#10;TOTALE EUR              ..."></textarea>
+   <div class="row" style="margin-top:8px"><button class="b" onclick="parseReceipt()">Analizza</button>
+   <span class="mu">Servono solo le righe prodotto: totale, IVA, resto, pagamento ecc. vengono filtrate automaticamente. Puoi copiare il testo dall'app/e-mail dello scontrino o da un OCR.</span></div></div>`;
+  if(pending){
+    h+=`<div class="card"><h2>Risultato analisi</h2>${pendingDup?'<p class="tag w">⚠ Questo scontrino risulta già importato: aggiungerlo di nuovo raddoppierebbe le scorte.</p>':''}<div class="scroll"><table><tr><th>Riga scontrino</th><th>Prezzo</th><th>Q.tà</th><th>Associa a</th></tr>`;
+    pending.forEach((r,i)=>{
+      h+=`<tr><td>${esc(r.text)}</td><td>${eur(r.price)}</td><td><input type="number" value="${r.qty}" onchange="pending[${i}].qty=num(this.value)||1"></td>
+      <td><select onchange="pending[${i}].pid=this.value">
+       <option value="">— ignora —</option><option value="__new" ${r.pid==='__new'?'selected':''}>➕ Nuovo prodotto</option>
+       ${S.products.map(p=>`<option value="${p.id}" ${r.pid===p.id?'selected':''}>${esc(p.name)}</option>`).join('')}</select></td></tr>`});
+    h+=`</table></div><p><button class="b" onclick="applyReceipt()">Aggiungi alle scorte</button> <button class="g" onclick="pending=null;render()">Annulla</button></p></div>`}
+  if(S.receipts.length)h+=`<div class="card"><h2>Storico acquisti</h2><div class="mu">${S.receipts.slice(-10).reverse().map(r=>`${esc(r.date)} — ${r.n} articoli, ${eur(r.tot)}`).join('<br>')}</div></div>`;
+  return h;
+}
+function parseReceipt(){
+  const lines=document.getElementById('r_txt').value.split(/\r?\n/);const out=[];
+  for(let raw of lines){
+    let l=raw.trim();if(!l||IGNORE.test(l))continue;
+    const m=l.match(/(\d+[.,]\d{2})\s*[A-Za-z]?\s*$/);if(!m)continue;
+    const price=num(m[1]);let text=l.slice(0,m.index).trim();
+    let qty=1;const q=text.match(/^(\d+)\s*[x*]\s*/i);if(q){qty=+q[1];text=text.slice(q[0].length)}
+    text=text.replace(/\s{2,}.*$/,'').trim();
+    if(norm(text).length<3||/^(totale|resto|iva)/i.test(text))continue;
+    if(S.ignored.includes(norm(text)))continue;
+    const p=S.products.find(p=>matches(p,text));
+    out.push({text,price,qty,pid:p?p.id:'__new'});
+  }
+  // impronta dello scontrino: se è già stato importato, avvisa (evita di sommare due volte le scorte)
+  pendingFp=out.map(r=>norm(r.text)+r.price).join('|');
+  pendingDup=!!pendingFp&&S.receipts.some(r=>r.fp===pendingFp);
+  pending=out;render()}
+function applyReceipt(){
+  if(pendingDup&&!confirm('Scontrino già importato. Aggiungerlo comunque?'))return;
+  let tot=0,n=0;
+  for(const r of pending){
+    if(!r.pid){S.ignored.push(norm(r.text));continue}
+    let p=S.products.find(x=>x.id===r.pid);
+    if(r.pid==='__new'){
+      const name=r.text.replace(/\b\d+\s?(g|kg|l|lt|ml|cl)\b/i,'').trim().toLowerCase().replace(/^\w/,c=>c.toUpperCase());
+      p={id:uid(),name,keys:norm(r.text),cat:guessCat(r.text),unit:'pz',qty:0,upd:Date.now(),min:1,target:3,use:0,usual:0};S.products.push(p)}
+    setQty(p,qtyNow(p)+r.qty);
+    const unit=r.price/r.qty;p.last=unit;
+    p.usual=p.usual?(p.usual*0.5+unit*0.5):unit; // media mobile del prezzo abituale
+    tot+=r.price;n+=r.qty}
+  S.receipts.push({date:new Date().toLocaleDateString('it-IT'),n,tot,fp:pendingFp});
+  pending=null;save();go('scorte')}
+
+// ---------- volantini ----------
+function vVolantini(){
+  const mine=S.myStores||[];
+  let h=`<div class="card"><h2>📍 I miei supermercati</h2>
+   <div class="mu">Spunta quelli che hai vicino: confronto e lista useranno solo i loro volantini. Se non spunti nulla vengono considerati tutti.</div>
+   <div class="row" style="margin-top:8px">${allStores().map(n=>`<label class="tag" style="cursor:pointer;${mine.some(x=>norm(x)===norm(n))?'':'opacity:.55'}"><input type="checkbox" data-n="${esc(n)}" ${mine.some(x=>norm(x)===norm(n))?'checked':''} onchange="toggleStore(this.dataset.n)"> ${esc(n)}</label>`).join('')}</div>
+   <div class="row"><input id="cs_name" placeholder="Altro supermercato (es. Coop Alleanza)" size="26"><button class="b" onclick="addStore()">Aggiungi</button>
+   ${mine.length?'<button class="g" onclick="clearStores()">Deseleziona tutti</button>':''}</div></div>
+  <div class="card"><h2>Aggiungi offerte</h2>
+   <datalist id="storelist">${allStores().map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+   <div class="row"><input id="f_store" list="storelist" placeholder="Negozio (es. Lidl)" size="14"><input id="f_prod" placeholder="Prodotto" size="18">
+   <input id="f_price" type="number" step="0.01" placeholder="Prezzo €"><input id="f_from" placeholder="dal gg/mm" size="9"><input id="f_to" placeholder="al gg/mm" size="9">
+   <button class="b" onclick="addFlyer()">Aggiungi</button></div>
+   <p class="mu" style="margin:6px 0">Oppure incolla più offerte, una per riga: <code>negozio; prodotto; prezzo; dal; al</code> (date opzionali)</p>
+   <textarea id="f_bulk" style="min-height:90px" placeholder="Lidl; latte parzialmente scremato; 0,99; 10/10; 16/10&#10;Conad; pasta barilla; 0,89; ; 20/10"></textarea>
+   <p><button class="b" onclick="bulkFlyer()">Importa righe</button></p></div>`;
+  const rows=[...S.flyers].sort((a,b)=>validFlyer(b)-validFlyer(a));
+  h+=`<div class="card"><h2>Offerte (${rows.length})</h2><div class="scroll"><table><tr><th>Negozio</th><th>Prodotto</th><th>Prezzo</th><th>Validità</th><th>Stato</th><th></th></tr>`;
+  for(const f of rows){const ok=validFlyer(f),mn=isMine(f.store);
+    h+=`<tr${ok&&!mn?' style="opacity:.5"':''}><td>${esc(f.store)}</td><td>${esc(f.product)}</td><td>${eur(num(f.price))}</td><td>${esc(f.from||'')} ${f.to?'→ '+esc(f.to):''}</td>
+    <td><span class="tag ${ok&&mn?'':'w'}">${!ok?'scaduta':mn?'valida':'negozio non selezionato'}</span></td><td><button class="g" onclick="delFlyer('${f.id}')">✕</button></td></tr>`}
+  h+=`</table></div><p><button class="g" onclick="purge()">Elimina offerte scadute</button></p></div>`;
+  return h;
+}
+function addFlyer(){const g=i=>document.getElementById(i).value.trim();
+  if(!g('f_prod')||!g('f_price'))return;
+  S.flyers.push({id:uid(),store:g('f_store')||'Negozio',product:g('f_prod'),price:num(g('f_price')),from:g('f_from'),to:g('f_to')});save();render()}
+function bulkFlyer(){
+  document.getElementById('f_bulk').value.split(/\r?\n/).forEach(l=>{
+    const a=l.split(';').map(x=>x.trim());if(a.length<3||!isFinite(num(a[2])))return;
+    S.flyers.push({id:uid(),store:a[0],product:a[1],price:num(a[2]),from:a[3]||'',to:a[4]||''})});
+  save();render()}
+function delFlyer(id){S.flyers=S.flyers.filter(f=>f.id!==id);save();render()}
+function purge(){S.flyers=S.flyers.filter(validFlyer);save();render()}
+
+// ---------- demo ----------
+function demo(){
+  const P=(name,keys,qty,min,target,use,usual)=>({id:uid(),name,keys,unit:'pz',qty,upd:Date.now(),min,target,use,usual});
+  S.products=[P('Latte','latte',1,2,6,0.3,1.29),P('Pasta','pasta,spaghetti,penne',2,2,8,0.15,1.10),P('Uova','uova',6,6,12,0.5,2.30),
+    P('Caffè','caffe',1,1,4,0.1,3.90),P('Passata','passata,pelati',5,2,6,0.1,0.95),P('Detersivo piatti','detersivo piatti,svelto',1,1,3,0.03,1.80)];
+  ensureCats();
+  const d=new Date(),f=n=>{const x=new Date();x.setDate(d.getDate()+n);return x.getDate()+'/'+(x.getMonth()+1)};
+  S.flyers=[
+   {id:uid(),store:'Lidl',product:'latte parzialmente scremato',price:0.89,from:f(-2),to:f(5)},
+   {id:uid(),store:'Conad',product:'latte fresco',price:1.05,from:f(-2),to:f(5)},
+   {id:uid(),store:'Eurospin',product:'caffe macinato 250g',price:2.49,from:f(-1),to:f(6)},
+   {id:uid(),store:'Lidl',product:'pasta penne',price:0.65,from:f(-1),to:f(6)},
+   {id:uid(),store:'Carrefour',product:'uova fresche 6',price:1.79,from:f(-3),to:f(3)}];
+  save();render()}
+render();
+</script>
+</body>
+</html>
